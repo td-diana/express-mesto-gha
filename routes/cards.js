@@ -1,10 +1,9 @@
 const routerCards = require('express').Router();
+const auth = require('../middlewares/auth');
 
 const {
   getAllCards, createCard, deleteCardById, likeCard, dislikeCard,
 } = require('../controllers/cards');
-
-const auth = require('../middlewares/auth');
 
 routerCards.use(auth);
 routerCards.get('/cards', getAllCards);
