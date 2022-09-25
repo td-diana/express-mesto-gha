@@ -32,7 +32,9 @@
     "celebrate": "^15.0.1",
     "dotenv": "^16.0.2",
     "express": "^4.18.1",
+    "joi-objectid": "^4.0.2",
     "jsonwebtoken": "^8.5.1",
+    "mongodb": "^4.10.0",
     "mongoose": "^6.5.5",
     "validator": "^13.7.0"
   }
