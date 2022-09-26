@@ -14,7 +14,7 @@
     "url": "git+https://github.com/td-diana/express-mesto-gha.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Temirkaev Evgeniy",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/td-diana/express-mesto-gha/issues"
@@ -34,7 +34,6 @@
     "express": "^4.18.1",
     "joi-objectid": "^4.0.2",
     "jsonwebtoken": "^8.5.1",
-    "mongodb": "^4.10.0",
     "mongoose": "^6.5.5",
     "validator": "^13.7.0"
   }
