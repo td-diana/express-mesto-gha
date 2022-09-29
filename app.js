@@ -2,22 +2,19 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { errors } = require('celebrate');
-// const { createUser, login } = require('./controllers/users');
-// const { auth } = require('./middlewares/auth');
 const router = require('./routes/routes');
 const { handleError } = require('./middlewares/handleError');
-// const { authorizationValidation, registrationValidation } = require('./middlewares/validation');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const { PORT = 3000 } = process.env;
 const app = express();
 app.use(bodyParser.json());
 
-// app.post('/signup', registrationValidation, createUser);
-// app.post('/signin', authorizationValidation, login);
-
-// app.use(auth);
+app.use(requestLogger); // подключаем логгер запросов
 
 app.use(router);
+
+app.use(errorLogger); // подключаем логгер ошибок
 
 app.use(errors());
 app.use(handleError);
