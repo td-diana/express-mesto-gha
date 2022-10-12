@@ -1,18 +1,20 @@
-const Cards = require('../models/card');
+const Card = require('../models/card');
 const BadRequestError = require('../errors/bad-request-errors');
 const NotFoundError = require('../errors/not-found-errors');
 const ForbiddenError = require('../errors/forbidden-errors');
 
-const getAllCards = (req, res, next) => {
-  Cards.find({})
-  .then((cards) => res.send(cards.reverse()))
+// GET /cards — возвращает все карточки
+const getCards = (req, res, next) => {
+  Card.find({})
+    .then((cards) => res.send(cards.reverse()))
     .catch(next);
 };
 
+// POST /cards — создаёт карточку
 const createCard = (req, res, next) => {
   const { name, link } = req.body;
 
-  Cards.create({ name, link, owner: req.user._id })
+  Card.create({ name, link, owner: req.user._id })
     .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -23,59 +25,58 @@ const createCard = (req, res, next) => {
     });
 };
 
-const deleteCardById = (req, res, next) => {
-  const cardId = req.params.id;
-  return Cards.findById(cardId)
-    .orFail(() => {
-      throw new NotFoundError('Карточка не найдена');
-    })
+// DELETE /cards/:cardId — удаляет карточку по идентификатору
+const deleteCard = (req, res, next) => {
+  Card.findById(req.params.cardId)
+    .orFail(() => next(new NotFoundError('Карточка не найдена')))
     .then((card) => {
-      if (card.owner.toString() === req.user._id) {
-        Cards.findByIdAndRemove(cardId)
-          .then(() => res.send(card));
+      if (!card.owner.equals(req.user._id)) {
+        next(new ForbiddenError('Нельзя удалить чужую карточку'));
       } else {
-        throw new ForbiddenError('Нельзя удалить чужую карточку');
+        Card.findByIdAndRemove(req.params.cardId)
+          .then(() => res.send(card))
+          .catch(next);
       }
     })
-    .catch(next);
-};
-
-const likeCard = (req, res, next) => {
-  Cards.findByIdAndUpdate(
-    req.params.id,
-    { $addToSet: { likes: req.user._id } },
-    { new: true },
-  )
-    .orFail(() => {
-      throw new NotFoundError('Карточка не найдена');
-    })
-    .then((card) => res.send(card))
     .catch((err) => {
-      if (err.name === 'CastError' || err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         next(new BadRequestError('Переданы некорректные данные'));
-      } if (err.name === 'NotFoundError') {
-        next(new NotFoundError('Карточка не найдена'));
       } else {
         next(err);
       }
     });
 };
 
-const dislikeCard = (req, res, next) => {
-  Cards.findByIdAndUpdate(
-    req.params.id,
-    { $pull: { likes: req.user._id } },
+// PUT /cards/:cardId/likes — поставить лайк карточке
+const likeCard = (req, res, next) => {
+  Card.findByIdAndUpdate(
+    req.params.cardId,
+    { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
     { new: true },
   )
-    .orFail(() => {
-      throw new NotFoundError('Карточка не найдена');
-    })
+    .orFail(() => next(new NotFoundError('Карточка не найдена')))
     .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new BadRequestError('Переданы некорректные данные'));
-      } if (err.name === 'NotFoundError') {
-        next(new NotFoundError('Карточка не найдена'));
+      } else {
+        next(err);
+      }
+    });
+};
+
+// DELETE /cards/:cardId/likes — убрать лайк с карточки
+const dislikeCard = (req, res, next) => {
+  Card.findByIdAndUpdate(
+    req.params.cardId,
+    { $pull: { likes: req.user._id } },
+    { new: true },
+  )
+    .orFail(() => next(new NotFoundError('Карточка не найдена')))
+    .then((card) => res.send(card))
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequestError('Переданы некорректные данные'));
       } else {
         next(err);
       }
@@ -83,9 +84,9 @@ const dislikeCard = (req, res, next) => {
 };
 
 module.exports = {
-  getAllCards,
+  getCards,
   createCard,
-  deleteCardById,
+  deleteCard,
   likeCard,
   dislikeCard,
 };
